@@ -120,6 +120,9 @@ class SchedulerV1:
                         [x_jdt[(j, d, s)] for s in range(t + 1)]
                     ) for j in range(len(jobs))]
                 ) <= t + 1
+        # C3: energy should not exceed daily available energy.
+        for d in range(self.n_days):
+            model += cp.sum([x_jdt[(j, d, t)] * energy[j] for t in range(self.n_slots) for j in range(len(jobs))]) <= self.configuration.ideal_energy_level_per_day
         # we want to minimize sum_j sum_d sum_t w_j (t + e_j) x_jdt
         model.minimize(cp.sum(
             [cp.sum(
@@ -132,7 +135,6 @@ class SchedulerV1:
         # that is, the energy expense over the planning horizon.
         # remaining constraints:
         # TODO: - take elements from the availabilities calendar and force x_jtd = 0 for periods where unavailable.
-        # TODO: - take the energy gauge availability.
         return model, x_jdt
 
     def plan(self) -> SchedulingPlan:
