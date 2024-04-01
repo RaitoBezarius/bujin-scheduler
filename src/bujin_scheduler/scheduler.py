@@ -45,7 +45,7 @@ class SchedulingPlan:
         for day in range(n_days):
             for slot in range(n_slots):
                 max_ = sum(values[(job, day, s)] for s in range(slot + 1) for job in range(len(jobs)))
-                assert max_ <= slot
+                assert max_ <= slot + 1
 
         for job in range(n_jobs):
             for day in range(n_days):
@@ -71,7 +71,7 @@ class SchedulerV1:
 
     @property
     def n_slots(self) -> int:
-        return (self.configuration.planning_range_per_day[1] - self.configuration.planning_range_per_day[0])
+        return (self.configuration.planning_range_per_day[1] - self.configuration.planning_range_per_day[0].hour + 1)
 
     @property
     def n_days(self) -> int:
@@ -119,7 +119,7 @@ class SchedulerV1:
                     [cp.sum(
                         [x_jdt[(j, d, s)] for s in range(t + 1)]
                     ) for j in range(len(jobs))]
-                ) <= t
+                ) <= t + 1
         # we want to minimize sum_j sum_d sum_t w_j (t + e_j) x_jdt
         model.minimize(cp.sum(
             [cp.sum(
