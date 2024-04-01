@@ -33,6 +33,31 @@ short-term horizon of what are the tasks I need to deal with on a daily basis.
 This software is about moving parts of the long term storage to the short term
 horizon in a clever way, taking into account the previous constraints.
 
+### Scheduling v1
+
+#### Parameters & definitions
+
+There's an ideal energy level every day, let's say $E_{\text{ideal}}$.
+
+A reasonably good day is defined as a day that (a) achieve the objectives (b) is not overworking the entity under the schedule (c) is not a bad day.
+
+A good day is just a reasonably good day without (a) and (b).
+
+The next day after a good day, the available energy level should not be too far from the ideal one. The next day after a bad day, the available energy level could be as low as 20 % or 50 % of the ideal.
+
+#### Aims
+
+(1) Schedule as many as urgent tasks under constraint of the energy levels and the 'status' of the day.
+(2) Predict whether a day has been good or bad based on the remaining tasks scheduled.
+
+#### Estimate a task energy level consumption
+
+A task should have the right amount of metadata to be mappable to energy level:
+
+- Prior existing energy level estimate should be taken into account
+- UDA input on the difficulty level / time that it should take should be taken into account
+- Attempt number on the task should be taken into account
+
 ## Alternatives
 
 I tried https://github.com/bergercookie/syncall before and it seems very nice,
