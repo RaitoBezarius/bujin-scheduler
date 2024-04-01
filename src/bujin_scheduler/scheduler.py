@@ -109,7 +109,6 @@ class SchedulerV1:
         # job is processed once.
         for j in range(len(jobs)):
             C_j = cp.sum([cp.sum([x_jdt[(j, d, t)] for t in range(self.n_slots)]) for d in range(self.n_days)]) == 1
-            print(C_j)
             model += C_j
         # C2: sum_(j=1)^n sum_(s=0)^(t - 1) x_jds <= t for all t = 0..l_d for all d = 0..l
         # processing is serial, not parallel, there cannot be more than t jobs processed in the window [[0, t[[ for any day for any t.
@@ -150,7 +149,6 @@ class SchedulerV1:
         # TODO: can we consider the full range of tasks without combinatorial explosion?
         model, time_variables = self.build_model(pending_tasks[:self.max_jobs])
         print(f'Model has {len(model.constraints)} constraints')
-        print(model)
         has_solution = model.solve()
         print("Status: ", model.status())
         if has_solution:
