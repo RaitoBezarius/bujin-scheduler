@@ -5,7 +5,7 @@ import click
 from collections import defaultdict
 import cpmpy as cp
 from typing import Any, Tuple
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 @dataclass
 class SchedulerConfiguration:
@@ -16,7 +16,7 @@ class SchedulerConfiguration:
     # e.g. 60 minutes for 1 hour slot per day.
     discretization_per_day: int
     # Day start / day end range.
-    planning_range_per_day: Tuple[int, int]
+    planning_range_per_day: Tuple[datetime, int]
 
 @dataclass
 class ScheduleItem:
@@ -39,7 +39,7 @@ class SchedulingPlan:
         plan.transport_matrix = transport_matrix
         n_jobs = len(jobs)
         # TODO: make next start configurable.
-        start = datetime.now().replace(day=datetime.now().day + 1, hour=config.planning_range_per_day[0], minute=0, second=0, microsecond=0) # start at planning_range_per_day[0]
+        start = config.planning_range_per_day[0]
         planning = []
         values = transport_matrix.value()
         for day in range(n_days):

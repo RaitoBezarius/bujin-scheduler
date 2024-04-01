@@ -2,6 +2,8 @@ import click
 import caldav
 import keyring
 import taskw
+from zoneinfo import ZoneInfo
+from datetime import datetime
 
 from bujin_scheduler.synchronizer import TodoSynchronizer
 from .scheduler import SchedulerV1, SchedulerConfiguration, SchedulingPlan
@@ -22,16 +24,15 @@ def find_calendar(calendar_id: str) -> caldav.Calendar:
         return target_calendar
 
 
-def apply_plan(calendar_id: str, plan: SchedulingPlan) -> None:
-    target_calendar = find_calendar(calendar_id)
-
-
 def compute_plan(calendar_id: str, constraint_calendar_ids: list[str]) -> SchedulingPlan:
     click.echo('Generating a plan...')
 
+    today = datetime.now(ZoneInfo("Europe/Paris"))
+    start = today.replace(day=today.day + 1, hour=10, minute=0, second=0, microsecond=0)
+
     tasks = taskw.TaskWarrior(marshal=True)
     scheduler = SchedulerV1(
-        SchedulerConfiguration(ideal_energy_level_per_day=100, planning_horizon=14, discretization_per_day=60, planning_range_per_day=(10, 16)),
+        SchedulerConfiguration(ideal_energy_level_per_day=100, planning_horizon=3, discretization_per_day=60, planning_range_per_day=(start, 16)),
         find_calendar(calendar_id),
         tasks
     )
