@@ -141,7 +141,7 @@ class SchedulerV1:
         Prepare a plan to update the current scheduling situation.
         """
         # The idea here is to build a model and throw it to a solver.
-        pending_tasks = self.tasks.load_tasks().get('pending', [])
+        pending_tasks = list(filter(lambda task: task.get('wait') is None, self.tasks.load_tasks().get('pending', [])))
         if not pending_tasks:
             click.echo('No pending task, no schedule to plan!')
             return SchedulingPlan()
