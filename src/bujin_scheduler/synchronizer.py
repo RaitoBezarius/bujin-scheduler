@@ -68,10 +68,12 @@ class TodoSynchronizer:
         seen = defaultdict(lambda: False)
 
         for item in current_items:
-            print(item.icalendar_instance)
-            taskwarrior_uuid = item.icalendar_instance.subcomponents[0].get('X-TaskWarrior-UUID')
+            todo_item = item.icalendar_instance.subcomponents[1]
+            taskwarrior_uuid = todo_item.get('X-TaskWarrior-UUID')
             taskwarrior_ids[taskwarrior_uuid] = item
-            item.delete()
+            # TODO: handle cancellation
+            if todo_item.get('Status') == 'NEEDS-ACTION':
+                item.delete()
 
         for item in self.new_items:
             if item.uuid not in taskwarrior_ids:
