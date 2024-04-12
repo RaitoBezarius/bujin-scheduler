@@ -7,11 +7,12 @@ from datetime import datetime
 
 from bujin_scheduler.synchronizer import TodoSynchronizer
 from .scheduler import SchedulerV1, SchedulerConfiguration, SchedulingPlan
-from .secrets import url, username, password
 
 from typing import Tuple, Type
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict, TomlConfigSettingsSource, PydanticBaseSettingsSource
+
+import subprocess
 
 class SchedulingConfiguration(BaseModel):
     target_calendar: str
@@ -37,11 +38,24 @@ class SolverConfiguration(BaseModel):
     # Tasks of 1 hour
     discretization_in_minutes: int = 60
 
+class ConnectionConfiguration(BaseModel):
+    username: str
+    password_command: str
+    caldav_url: str
+
+    @property
+    def password(self) -> str:
+        rc, password = subprocess.getstatusoutput(self.password_command)
+        if rc != 0:
+            raise RuntimeError('Failed to get password')
+
+        return password
+
 class AppConfig(BaseSettings):
     scheduling: SchedulingConfiguration
     constraints: ConstraintConfiguration
     solver: SolverConfiguration
-
+    connection: ConnectionConfiguration
 
     @classmethod
     def settings_customise_sources(
@@ -65,8 +79,8 @@ class AppConfig(BaseSettings):
             planning_range_per_day=(start, self.constraints.operation_range[1])
         )
 
-def find_calendar(calendar_id: str) -> caldav.Calendar:
-    with caldav.DAVClient(url=url, username=username, password=password) as client:
+def find_calendar(connection: ConnectionConfiguration, calendar_id: str) -> caldav.Calendar:
+    with caldav.DAVClient(url=connection.caldav_url, username=connection.username, password=connection.password) as client:
         me = client.principal()
         calendars = me.calendars()
         target_calendar = None
@@ -88,7 +102,7 @@ def compute_plan(config: AppConfig) -> SchedulingPlan:
     scheduler_configuration = config.get_scheduler_config()
     scheduler = SchedulerV1(
         scheduler_configuration,
-        find_calendar(config.scheduling.target_calendar),
+        find_calendar(config.connection, config.scheduling.target_calendar),
         tasks
     )
     return scheduler.plan()
@@ -110,14 +124,14 @@ def plan(ctx):
     config: AppConfig = ctx.obj['app_config']
     print(config)
     plan = compute_plan(config)
-    synchronizer = TodoSynchronizer(plan.planning, find_calendar(config.scheduling.target_calendar))
+    synchronizer = TodoSynchronizer(plan.planning, find_calendar(config.connection, config.scheduling.target_calendar))
     synchronizer.plan().diagnose()
 
 @cli.command()
 @click.pass_context
 def apply(ctx):
     config: AppConfig = ctx.obj['app_config']
-    target_calendar = find_calendar(config.scheduling.target_calendar)
+    target_calendar = find_calendar(config.connection, config.scheduling.target_calendar)
     plan = compute_plan(config)
     synchronizer = TodoSynchronizer(plan.planning, target_calendar)
     synchronizer.plan().apply(target_calendar)
