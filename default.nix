@@ -9,6 +9,8 @@
         ps.click
         ps.secretstorage
         ps.dbus-python
+        ps.pydantic
+        ps.pydantic-settings
         (ps.callPackage ./nix/cpmpy.nix { })
       ]))
     ];
